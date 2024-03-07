@@ -1,0 +1,49 @@
+Program.Sub.ScreenSU.Start
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+'Coded by: ANS
+'Project Start Date: 7/17/12
+'Quote 3702 - Prevent User from Scanning/Clocking into a Closed Job Sequence
+'Hook: 15754,15934,15951
+
+V.Local.sSQL.Declare(String)
+V.Local.iRet.Declare(Long)
+V.Local.sPwd.Declare(String)
+V.Local.sRet.Declare(String)
+
+V.Local.sPwd.Set("Funny.1")
+
+F.ODBC.Connection!con.OpenConnection(V.Ambient.PDSN,V.Ambient.PUser,V.Ambient.PPass)
+F.Intrinsic.String.Concat("Select Flag_Closed from Job_Operations where Job='",V.Passed.009990,"' and Suffix='",V.Passed.009991,"' and Seq='",V.Passed.009992,"'",V.Local.sSQL)
+F.odbc.Connection!con.OpenRecordsetRO("rst",V.Local.sSQL)
+F.Intrinsic.Control.If(V.ODBC.con!rst.EOF,=,False)
+	F.Intrinsic.Control.If(V.ODBC.con!rst.FieldVal!Flag_Closed,=,"Y")
+		F.Intrinsic.ui.Msgbox("Sequence is closed.  Would you like to enter an override password?","Closed sequence",4,V.Local.iRet)
+		F.Intrinsic.Control.If(V.Local.iRet,=,6)
+			F.Intrinsic.UI.Inputbox("Enter override password","Closed sequence override","",V.Local.sRet)
+			F.Intrinsic.Control.If(V.Local.sRet.trim,<>,V.Local.sPwd.trim)
+				F.Intrinsic.UI.Msgbox("Invalid override password.  Sequence not started.","Closed sequence override",0,V.Local.iRet)
+				V.Passed.777777.Set(1)
+				F.Intrinsic.UI.DoEvents
+			F.Intrinsic.Control.endif
+		F.Intrinsic.Control.ElseIf(V.Local.iRet,=,7)
+			V.Passed.777777.Set(1)
+			F.Intrinsic.UI.DoEvents
+		F.Intrinsic.Control.EndIf
+
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.EndIf
+F.ODBC.con!rst.Close
+F.ODBC.Connection!con.Close
+
+Program.Sub.Main.End
+
+Program.Sub.Comments.Start
+${$0$}$ATG_PreventWorkOnClosedSeq$}$ANS$}$7/18/2012
+Program.Sub.Comments.End
+
